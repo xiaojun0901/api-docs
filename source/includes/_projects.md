@@ -314,12 +314,7 @@ curl "https://api.arcsite.com/v1/projects/<ID>" \
   },
   "tags": ["tag1", "tag2"],
   "archived": false,
-  "owner": "owner@arcsite.com",
-  "collaborators": [
-    {"email": "admin@arcsite.com", "role": "PROJECT_ADMIN"},
-    {"email": "dev@arcsite.com", "role": "PROJECT_COLLABORATOR"},
-    {"email": "viewer@arcsite.com", "role": "PROJECT_VIEWER"}
-  ]
+  "owner": "owner@arcsite.com"
 }
 ```
 
@@ -331,23 +326,14 @@ Returns project of your organization by project id,
 
 ### Response Fields
 
-In addition to the core project fields, the response includes who can access the project:
+In addition to the core project fields, the response includes:
 
-| Field         | Type                                | Description                                                              |
-| ------------- | ----------------------------------- | ------------------------------------------------------------------------ |
-| owner         | String                              | Email of the project owner (the creator). Always a single email.         |
-| collaborators | List[[Collaborator](#collaborator)] | Users with access to the project, excluding the owner.                   |
-
-<aside class='notice'>
-The owner is returned as a separate field and never appears in <code>collaborators</code>. If you also need the owner in your own view, render it alongside the collaborator list.
-</aside>
+| Field | Type   | Description                                                      |
+| ----- | ------ | ---------------------------------------------------------------- |
+| owner | String | Email of the project owner (the creator). Always a single email. |
 
 <aside class='notice'>
-When a project is shared with a user group, the group's members are flattened into <code>collaborators</code> as individual entries, each carrying the group's role. The group name itself is not returned.
-</aside>
-
-<aside class='notice'>
-If a user has access through multiple paths (e.g., directly and via a group), they appear once with the highest-priority role, where <code>PROJECT_ADMIN</code> > <code>PROJECT_COLLABORATOR</code> > <code>PROJECT_VIEWER</code>. Inactive users are excluded.
+The owner never appears in the project's collaborator list — use the <a href="#get-project-collaborators">Get Project Collaborators</a> endpoint to list everyone else who has access.
 </aside>
 
 ## Search Projects
@@ -419,6 +405,56 @@ Searching projects by conditions and returns the list of filtered projects in yo
 
 <aside class='notice'>
 When there are multiple <tags>tags</tags>, only projects that both have these tags will be returned. <br>For example, if tags are <code>["Tag 1", "Tag 2"]</code>, then the returned Projects will all have both <code>Tag 1</code> and <code>Tag 2</code>.
+</aside>
+
+## Get Project Collaborators
+
+```shell
+curl "https://api.arcsite.com/v1/projects/<ID>/collaborators" \
+  -H "Authorization: Bearer **your_api_token_here**"
+```
+
+> The above command returns JSON structured like this:
+
+```json
+{
+  "collaborators": [
+    {"type": "user", "email": "admin@arcsite.com", "role": "PROJECT_ADMIN"},
+    {"type": "user", "email": "dev@arcsite.com", "role": "PROJECT_COLLABORATOR"},
+    {
+      "type": "group",
+      "group_id": 36029621652695041,
+      "name": "Sales Team",
+      "role": "PROJECT_VIEWER"
+    }
+  ]
+}
+```
+
+Returns everyone who has access to the project besides the owner — both users added directly and user groups the project is shared with.
+
+### HTTP Request
+
+`GET https://api.arcsite.com/v1/projects/<id>/collaborators`
+
+### Collaborator Entry
+
+Each entry is either a user or a user group, distinguished by `type`:
+
+| Field    | Type          | Description                                                |
+| -------- | ------------- | ---------------------------------------------------------- |
+| type     | String        | `user` or `group`                                          |
+| email    | String        | (user only) Email of the collaborator                      |
+| group_id | Number        | (group only) Id of the user group, see [Get User Group](#get-user-group) |
+| name     | String        | (group only) Name of the user group                        |
+| role     | [Role](#role) | Project role of the user, or of every member of the group  |
+
+<aside class='notice'>
+Groups are not expanded here — a shared group appears as a single <code>group</code> entry. Use <a href="#get-user-group">Get User Group</a> with the <code>group_id</code> to list its members.
+</aside>
+
+<aside class='notice'>
+If a user or group is granted multiple roles, the entry carries the highest-priority one, where <code>PROJECT_ADMIN</code> > <code>PROJECT_COLLABORATOR</code> > <code>PROJECT_VIEWER</code>. Inactive users are excluded, and the owner never appears in the list.
 </aside>
 
 ## Add Project Collaborators
@@ -511,6 +547,52 @@ This endpoint removes collaborators from a project.
 | Parameter | Type         | Description                 |
 | --------- | ------------ | --------------------------- |
 | emails    | List[String] | (required) emails to remove |
+
+## Get User Group
+
+```shell
+curl "https://api.arcsite.com/v1/user_groups/<ID>" \
+  -H "Authorization: Bearer **your_api_token_here**"
+```
+
+> The above command returns JSON structured like this:
+
+```json
+{
+  "id": 36029621652695041,
+  "name": "Sales Team",
+  "members": [
+    {
+      "user_id": 36029621652695042,
+      "name": "Bob Smith",
+      "email": "bob@arcsite.com"
+    },
+    {
+      "user_id": 36029621652695043,
+      "name": "Jane Doe",
+      "email": "jane@arcsite.com"
+    }
+  ]
+}
+```
+
+Returns a user group of your organization with its members. Use the `group_id` from [Get Project Collaborators](#get-project-collaborators) to expand a shared group into individual users.
+
+### HTTP Request
+
+`GET https://api.arcsite.com/v1/user_groups/<id>`
+
+### Member
+
+| Field   | Type   | Description             |
+| ------- | ------ | ----------------------- |
+| user_id | Number | Id of the user          |
+| name    | String | Full name of the user   |
+| email   | String | Email of the user       |
+
+<aside class='notice'>
+Inactive users are excluded from <code>members</code>. Built-in system groups are not accessible through this endpoint.
+</aside>
 
 ## Get Project Drawings
 
