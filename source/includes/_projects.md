@@ -447,7 +447,7 @@ Each entry is either a user or a user group, distinguished by `type`:
 | email    | String        | (user only) Email of the collaborator                      |
 | group_id | Number        | (group only) Id of the user group, see [Get User Group](#get-user-group) |
 | name     | String        | (group only) Name of the user group                        |
-| role     | [Role](#role) | Project role of the user, or of every member of the group  |
+| role     | [Role](#role) | Project role of the user, or of every member of the group. Same [Role](#role) values as accepted by [Add Project Collaborators](#add-project-collaborators). |
 
 <aside class='notice'>
 Groups are not expanded here — a shared group appears as a single <code>group</code> entry. Use <a href="#get-user-group">Get User Group</a> with the <code>group_id</code> to list its members.
