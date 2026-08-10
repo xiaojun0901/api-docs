@@ -375,17 +375,6 @@ same `project_id` but a different `proposal_id`. Key your automation off `propos
 `initial_proposal_id` to tie the change order back to the original proposal.
 :::
 
-:::caution
-Some cases never produce this event:
-
-- Proposals signed in person — the customer never opens the link themselves, so the first view
-  is recorded when the signature completes and no event is sent. The `proposal.status_changed`
-  event for the approval follows normally.
-- Proposals exported from the ArcSite App as a PDF or signed document. They have no online
-  proposal page for a customer to open.
-- Previews opened by the sales rep. Only a real customer's view counts.
-:::
-
 ```json title="Example"
 {
   "event": "proposal.viewed",
